@@ -1,3 +1,4 @@
+using OneOf;
 namespace Sox;
 
 public class Scanner
@@ -47,7 +48,7 @@ public class Scanner
 
     private (char first, char secord) next()
     {
-        return source.Count() switch
+        return source.Count switch
         {
             > 1 => (source.Dequeue(), source.Peek()),
             1 => (source.Dequeue(), '\0'),
@@ -57,32 +58,34 @@ public class Scanner
 
     private bool consumeString()
     {
+        var str = String.Empty; 
         while (source.Peek() is not '"' or '\0')
         {
             if (source.Peek() is '\n') line++;
-            text += source.Dequeue();
+            str += source.Dequeue();
         }
 
         if (source.Peek() is '\0')
             // Lox.error(line, "Unterminated string.");
-            return false;
+            throw new Exception("Unterminated string");
 
         source.Dequeue();
 
-        addToken(TokenType.STRING, text);
-        text = string.Empty;
+        addToken(TokenType.STRING, new (){ literal = str });
+        // text = string.Empty;
 
-        return source.Count() > 0;
+        return source.Count > 0;
     }
 
-    private bool addToken(TokenType type, object? literal = null)
+    private record TokenOptions(StringOrNumber? literal = null, string? lexeme = null);
+    private bool addToken(TokenType type, TokenOptions? args = null)
     {
         tokens.Add(new Token
         {
             tokenType = type,
-            literal = literal,
+            literal = args?.literal,
             line = line,
-            lexeme = "TODO"
+            lexeme = args?.lexeme ?? String.Empty
         });
 
         return source.Count > 0;
@@ -135,7 +138,7 @@ public class Scanner
             while (isDigit(source.Peek())) text += source.Dequeue();
         }
 
-        addToken(TokenType.NUMBER, Convert.ToDouble(text));
+        addToken(TokenType.NUMBER, new () { literal = Convert.ToDouble(text) });
         text = string.Empty;
 
         return source.Count > 0;
@@ -188,3 +191,6 @@ public class Scanner
         };
     }
 }
+
+    [GenerateOneOf]
+    public partial class StringOrNumber : OneOfBase<string, double> { }
