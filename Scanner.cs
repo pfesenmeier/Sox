@@ -106,12 +106,12 @@ public class Scanner
 
         text = string.Empty;
 
-        return source.Count() > 0;
+        return source.Count > 0;
     }
 
     private bool isAlpha(char c)
     {
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+        return Char.IsAsciiLetter(c) || c is '_';
     }
 
     private bool isAlphaNumeric(char c)
@@ -121,7 +121,7 @@ public class Scanner
 
     private bool isDigit(char c)
     {
-        return c >= '0' && c <= '9';
+        return Char.IsAsciiDigit(c);
     }
 
     private bool number()
@@ -188,30 +188,3 @@ public class Scanner
         };
     }
 }
-//     List<Token> scanTokens() {
-//         while (!isAtEnd()) {
-//             start = current;
-//             scanToken();
-//         }
-//
-//         tokens.add(new Token(EOF, "", null, line));
-//         return tokens;
-//     }
-//
-//     private void string() {
-//         while (peek() != '"' && !isAtEnd()) {
-//            if (peek() == '\n') line++;
-//            advance();
-//         }
-//
-//         if (isAtEnd()){
-//             Lox.error(line, "Unterminated string.");
-//             return;
-//         }
-//
-//         advance();
-//
-//         var value = source.substring(start + 1, current - 1);
-//         addToken(STRING, value);
-//     }
-// }
