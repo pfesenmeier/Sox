@@ -1,9 +1,11 @@
 namespace Sox;
 
-public class RuntimeError : Exception {
-    readonly Token token;
+public class RuntimeError : Exception
+{
+    private readonly Token token;
 
-    RuntimeError(Token token, String message): base(message) {
-      this.token = token;
-    } 
+    private RuntimeError(Token token, string message) : base(message)
+    {
+        this.token = token;
+    }
 }

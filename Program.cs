@@ -1,25 +1,29 @@
 ﻿namespace Sox;
 
-public class Program {
-    private static bool hadError = false;
+public class Program
+{
+    private static bool hadError;
 
-    public static void Main(string[] args) {
-        if (args.Count() > 1) {
+    public static void Main(string[] args)
+    {
+        if (args.Count() > 1)
+        {
             Console.WriteLine("Usage: lox [script]");
             Environment.Exit(64);
         }
 
-        if (args.Count() == 1) {
+        if (args.Count() == 1)
             runFile(args[0]);
-        } else {
+        else
             runPrompt();
-        }
     }
 
-    private static void runPrompt() {
+    private static void runPrompt()
+    {
         Console.WriteLine("Welcome to Lox v0.0.1.");
 
-        while (true) {
+        while (true)
+        {
             Console.Write("> ");
             var line = Console.ReadLine();
             if (line == null) break;
@@ -28,7 +32,8 @@ public class Program {
         }
     }
 
-    private static void runFile(String path) {
+    private static void runFile(string path)
+    {
         var file = File.ReadAllText(path);
 
         run(file);
@@ -36,15 +41,13 @@ public class Program {
         if (hadError) Environment.Exit(65);
     }
 
-    private static void run(String source) {
+    private static void run(string source)
+    {
         var scanner = new Scanner(source);
 
         var tokens = scanner.scanTokens();
 
-        foreach (var token in tokens) 
-        {
-          Console.WriteLine(token);
-        }
+        foreach (var token in tokens) Console.WriteLine(token);
         // Parser parser = new Parser(tokens);
         // Expr expression = parser.parse();
         // if (hadError) return;
@@ -52,20 +55,22 @@ public class Program {
         // Console.WriteLine(new AstPrinter().print(expression));
     }
 
-    static void error(int line, String message) {
+    private static void error(int line, string message)
+    {
         report(line, "", message);
         hadError = true;
     }
 
-    private static void report(int line, String where, String message) {
+    private static void report(int line, string where, string message)
+    {
         Console.Error.WriteLine("[line %s] Error%s: %s%n", line, where, message);
     }
 
-    public static void error(Token token, String message) {
-        if (token.tokenType == TokenType.EOF) {
+    public static void error(Token token, string message)
+    {
+        if (token.tokenType == TokenType.EOF)
             report(token.line, " at end", message);
-        } else {
+        else
             report(token.line, " at '" + token.lexeme + "'", message);
-        }
     }
 }

@@ -11,7 +11,6 @@ public record Token
 }
 
 [GenerateOneOf]
-public partial class StringOrNumber : OneOfBase<string, double> { }
-
-
-
+public partial class StringOrNumber : OneOfBase<string, double>
+{
+}

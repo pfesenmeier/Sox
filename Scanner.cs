@@ -1,4 +1,5 @@
 using OneOf;
+
 namespace Sox;
 
 public class Scanner
@@ -58,7 +59,7 @@ public class Scanner
 
     private bool consumeString()
     {
-        var str = String.Empty; 
+        var str = string.Empty;
         while (source.Count > 0 && source.Peek() is not '"')
         {
             if (source.Peek() is '\n') line++;
@@ -71,21 +72,20 @@ public class Scanner
 
         source.Dequeue();
 
-        addToken(new(tokenType: TokenType.STRING, literal: str, lexeme: $"\"{str}\"" ));
+        addToken(new TokenOptions(TokenType.STRING, literal: str, lexeme: $"\"{str}\""));
 
         return source.Count > 0;
     }
 
-
-    private record TokenOptions( TokenType tokenType,string lexeme, StringOrNumber? literal = null);
     private bool addToken(TokenOptions options)
     {
-        tokens.Add(new() {
+        tokens.Add(new Token
+        {
             tokenType = options.tokenType,
-           lexeme = options.lexeme,
-           literal = options.literal,
-           line = line
-            });
+            lexeme = options.lexeme,
+            literal = options.literal,
+            line = line
+        });
 
         return source.Count > 0;
     }
@@ -96,9 +96,9 @@ public class Scanner
         while (source.Count > 0 && isAlphaNumeric(source.Peek())) text += source.Dequeue();
 
         if (keywords.ContainsKey(text))
-            addToken(new (tokenType: keywords[text], lexeme: text));
+            addToken(new TokenOptions(keywords[text], text));
         else
-            addToken(new (tokenType: TokenType.IDENTIFIER, lexeme: text));
+            addToken(new TokenOptions(TokenType.IDENTIFIER, text));
 
         text = string.Empty;
 
@@ -107,7 +107,7 @@ public class Scanner
 
     private bool isAlpha(char c)
     {
-        return Char.IsAsciiLetter(c) || c is '_';
+        return char.IsAsciiLetter(c) || c is '_';
     }
 
     private bool isAlphaNumeric(char c)
@@ -117,7 +117,7 @@ public class Scanner
 
     private bool isDigit(char c)
     {
-        return Char.IsAsciiDigit(c);
+        return char.IsAsciiDigit(c);
     }
 
     private bool number()
@@ -132,7 +132,7 @@ public class Scanner
             while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
         }
 
-        addToken(new (tokenType: TokenType.NUMBER, lexeme: text, literal: Convert.ToDouble(text)));
+        addToken(new TokenOptions(TokenType.NUMBER, text, Convert.ToDouble(text)));
         text = string.Empty;
 
         return source.Count > 0;
@@ -152,21 +152,22 @@ public class Scanner
         return source.Count > 0;
     }
 
-    private bool consumeSecond() 
+    private bool consumeSecond()
     {
-      source.Dequeue();
+        source.Dequeue();
 
-      return source.Count > 0;
+        return source.Count > 0;
     }
 
     private bool scanToken()
     {
         var match = next();
 
-        Func<TokenType, bool> addOneTokenChar = (TokenType type) => addToken(new(tokenType: type, lexeme: match.first.ToString()));
-        Func<TokenType, bool> addTwoTokenChar = (TokenType type) => {
-          consumeSecond();
-          return addToken(new(tokenType: type, lexeme: ""  + match.first + match.secord));
+        Func<TokenType, bool> addOneTokenChar = type => addToken(new TokenOptions(type, match.first.ToString()));
+        Func<TokenType, bool> addTwoTokenChar = type =>
+        {
+            consumeSecond();
+            return addToken(new TokenOptions(type, "" + match.first + match.secord));
         };
 
         return match switch
@@ -201,7 +202,12 @@ public class Scanner
             (_, _) => throw new Exception()
         };
     }
+
+
+    private record TokenOptions(TokenType tokenType, string lexeme, StringOrNumber? literal = null);
 }
 
 [GenerateOneOf]
-public partial class StringOrChar: OneOfBase<string, char> {} 
+public partial class StringOrChar : OneOfBase<string, char>
+{
+}
