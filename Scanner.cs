@@ -26,8 +26,6 @@ public class Scanner
 
     private int line;
 
-    private string text = string.Empty;
-
     public Scanner(string source)
     {
         this.source = new Queue<char>(source);
@@ -65,8 +63,10 @@ public class Scanner
         }
 
         if (source.Count is 0)
-            // Lox.error(line, "Unterminated string.");
-            throw new Exception("Unterminated string");
+        {
+            Program.error(line, "Unterminated string.");
+            return source.Count > 0;
+        }
 
         source.Dequeue();
 
@@ -91,15 +91,14 @@ public class Scanner
     // pass in first char that has been removed from the queue
     private bool identifier(char first)
     {
-        // TODO text as local variable
+        var text = first.ToString();
+
         while (source.Count > 0 && isAlphaNumeric(source.Peek())) text += source.Dequeue();
 
         if (keywords.ContainsKey(text))
             addToken(new TokenOptions(keywords[text], text));
         else
             addToken(new TokenOptions(TokenType.IDENTIFIER, text));
-
-        text = string.Empty;
 
         return source.Count > 0;
     }
@@ -122,8 +121,7 @@ public class Scanner
     // pass in the first digit that has already been taken from the queue
     private bool number(char first)
     {
-        // TODO text local variable
-        text = "" + first;
+        var text = "" + first;
 
         while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
 
@@ -135,7 +133,6 @@ public class Scanner
         }
 
         addToken(new TokenOptions(TokenType.NUMBER, text, Convert.ToDouble(text)));
-        text = string.Empty;
 
         return source.Count > 0;
     }
@@ -172,6 +169,13 @@ public class Scanner
             return addToken(new TokenOptions(type, "" + match.first + match.secord));
         };
 
+        Func<char, bool> error = input =>
+        {
+            Program.error(line, $"unrecognized character: {input}");
+
+            return source.Count > 0;
+        };
+
         return match switch
         {
             ('(', _) => addOneTokenChar(TokenType.LEFT_PAREN),
@@ -197,14 +201,11 @@ public class Scanner
             ('"', _) => consumeString(),
             (' ' or '\r' or '\t', _) => source.Count > 0,
             ('\n', _) => incrementLine(),
-            // TODO throws
             var (first, _) when isDigit(first) => number(first),
-            // TODO cuts off first char
             var (first, _) when isAlpha(first) => identifier(first),
-            (_, _) => throw new Exception()
+            var (first, _) => error(first)
         };
     }
-
 
     private record TokenOptions(TokenType tokenType, string lexeme, StringOrNumber? literal = null);
 }

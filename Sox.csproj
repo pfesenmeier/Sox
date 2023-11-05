@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Watch Include="program.sox" />
+  </ItemGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>

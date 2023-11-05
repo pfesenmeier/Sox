@@ -12,7 +12,8 @@ public class Program
             Environment.Exit(64);
         }
 
-        if (args.Count() == 1)
+        // "dotnet watch" passes "run" as argument...
+        if (args.Count() == 1 && args[0] != "run")
             runFile(args[0]);
         else
             runPrompt();
@@ -55,7 +56,7 @@ public class Program
         // Console.WriteLine(new AstPrinter().print(expression));
     }
 
-    private static void error(int line, string message)
+    public static void error(int line, string message)
     {
         report(line, "", message);
         hadError = true;
@@ -63,14 +64,14 @@ public class Program
 
     private static void report(int line, string where, string message)
     {
-        Console.Error.WriteLine("[line %s] Error%s: %s%n", line, where, message);
+        Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
     }
 
     public static void error(Token token, string message)
     {
         if (token.tokenType == TokenType.EOF)
-            report(token.line, " at end", message);
+            report(token.line, "at end", message);
         else
-            report(token.line, " at '" + token.lexeme + "'", message);
+            report(token.line, "at '" + token.lexeme + "'", message);
     }
 }
