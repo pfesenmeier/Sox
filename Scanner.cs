@@ -1,5 +1,3 @@
-using OneOf;
-
 namespace Sox;
 
 public class Scanner
@@ -90,7 +88,8 @@ public class Scanner
         return source.Count > 0;
     }
 
-    private bool identifier()
+    // pass in first char that has been removed from the queue
+    private bool identifier(char first)
     {
         // TODO text as local variable
         while (source.Count > 0 && isAlphaNumeric(source.Peek())) text += source.Dequeue();
@@ -120,12 +119,15 @@ public class Scanner
         return char.IsAsciiDigit(c);
     }
 
-    private bool number()
+    // pass in the first digit that has already been taken from the queue
+    private bool number(char first)
     {
         // TODO text local variable
+        text = "" + first;
+
         while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
 
-        if (source.Peek() == '.' && isDigit(source.AsQueryable().Skip(1).First()))
+        if (source.Count > 1 && source.Peek() == '.' && isDigit(source.AsQueryable().Skip(1).First()))
         {
             text += source.Dequeue();
 
@@ -196,18 +198,13 @@ public class Scanner
             (' ' or '\r' or '\t', _) => source.Count > 0,
             ('\n', _) => incrementLine(),
             // TODO throws
-            var (first, _) when isDigit(first) => number(),
+            var (first, _) when isDigit(first) => number(first),
             // TODO cuts off first char
-            var (first, _) when isAlpha(first) => identifier(),
+            var (first, _) when isAlpha(first) => identifier(first),
             (_, _) => throw new Exception()
         };
     }
 
 
     private record TokenOptions(TokenType tokenType, string lexeme, StringOrNumber? literal = null);
-}
-
-[GenerateOneOf]
-public partial class StringOrChar : OneOfBase<string, char>
-{
 }
