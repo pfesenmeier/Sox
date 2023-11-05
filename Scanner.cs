@@ -59,53 +59,46 @@ public class Scanner
     private bool consumeString()
     {
         var str = String.Empty; 
-        while (source.Peek() is not '"' or '\0')
+        while (source.Count > 0 && source.Peek() is not '"')
         {
             if (source.Peek() is '\n') line++;
             str += source.Dequeue();
         }
 
-        if (source.Peek() is '\0')
+        if (source.Count is 0)
             // Lox.error(line, "Unterminated string.");
             throw new Exception("Unterminated string");
 
         source.Dequeue();
 
-        addToken(TokenType.STRING, new (){ literal = str });
-        // text = string.Empty;
+        addToken(new(tokenType: TokenType.STRING, literal: str, lexeme: $"\"{str}\"" ));
 
         return source.Count > 0;
     }
 
-    private record TokenOptions(StringOrNumber? literal = null, string? lexeme = null);
-    private bool addToken(TokenType type, TokenOptions? args = null)
+
+    private record TokenOptions( TokenType tokenType,string lexeme, StringOrNumber? literal = null);
+    private bool addToken(TokenOptions options)
     {
-        tokens.Add(new Token
-        {
-            tokenType = type,
-            literal = args?.literal,
-            line = line,
-            lexeme = args?.lexeme ?? String.Empty
-        });
+        tokens.Add(new() {
+            tokenType = options.tokenType,
+           lexeme = options.lexeme,
+           literal = options.literal,
+           line = line
+            });
 
         return source.Count > 0;
-    }
-
-    private bool consumeSecond()
-    {
-        source.Dequeue();
-
-        return true;
     }
 
     private bool identifier()
     {
-        while (isAlphaNumeric(source.Peek())) text += source.Dequeue();
+        // TODO text as local variable
+        while (source.Count > 0 && isAlphaNumeric(source.Peek())) text += source.Dequeue();
 
         if (keywords.ContainsKey(text))
-            addToken(keywords[text]);
+            addToken(new (tokenType: keywords[text], lexeme: text));
         else
-            addToken(TokenType.IDENTIFIER);
+            addToken(new (tokenType: TokenType.IDENTIFIER, lexeme: text));
 
         text = string.Empty;
 
@@ -129,16 +122,17 @@ public class Scanner
 
     private bool number()
     {
-        while (isDigit(source.Peek())) text += source.Dequeue();
+        // TODO text local variable
+        while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
 
         if (source.Peek() == '.' && isDigit(source.AsQueryable().Skip(1).First()))
         {
             text += source.Dequeue();
 
-            while (isDigit(source.Peek())) text += source.Dequeue();
+            while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
         }
 
-        addToken(TokenType.NUMBER, new () { literal = Convert.ToDouble(text) });
+        addToken(new (tokenType: TokenType.NUMBER, lexeme: text, literal: Convert.ToDouble(text)));
         text = string.Empty;
 
         return source.Count > 0;
@@ -146,7 +140,7 @@ public class Scanner
 
     private bool discardComment()
     {
-        while (source.Peek() is not '\n' or '\0') source.Dequeue();
+        while (source.Count > 0 && source.Peek() is not '\n') source.Dequeue();
 
         return source.Count > 0;
     }
@@ -158,39 +152,56 @@ public class Scanner
         return source.Count > 0;
     }
 
+    private bool consumeSecond() 
+    {
+      source.Dequeue();
+
+      return source.Count > 0;
+    }
+
     private bool scanToken()
     {
-        return next() switch
+        var match = next();
+
+        Func<TokenType, bool> addOneTokenChar = (TokenType type) => addToken(new(tokenType: type, lexeme: match.first.ToString()));
+        Func<TokenType, bool> addTwoTokenChar = (TokenType type) => {
+          consumeSecond();
+          return addToken(new(tokenType: type, lexeme: ""  + match.first + match.secord));
+        };
+
+        return match switch
         {
-            ('(', _) => addToken(TokenType.LEFT_PAREN),
-            (')', _) => addToken(TokenType.RIGHT_PAREN),
-            ('{', _) => addToken(TokenType.LEFT_BRACE),
-            ('}', _) => addToken(TokenType.RIGHT_BRACE),
-            (',', _) => addToken(TokenType.COMMA),
-            ('.', _) => addToken(TokenType.DOT),
-            ('-', _) => addToken(TokenType.MINUS),
-            ('+', _) => addToken(TokenType.PLUS),
-            ('*', _) => addToken(TokenType.STAR),
-            (';', _) => addToken(TokenType.SEMICOLON),
-            ('!', '=') => consumeSecond() && addToken(TokenType.BANG_EQUAL),
-            ('!', _) => addToken(TokenType.BANG),
-            ('=', '=') => consumeSecond() && addToken(TokenType.EQUAL_EQUAL),
-            ('=', _) => addToken(TokenType.EQUAL),
-            ('>', '=') => consumeSecond() && addToken(TokenType.GREATER_EQUAL),
-            ('>', _) => addToken(TokenType.GREATER),
-            ('<', '=') => consumeSecond() && addToken(TokenType.LESS_EQUAL),
-            ('<', _) => addToken(TokenType.LESS),
+            ('(', _) => addOneTokenChar(TokenType.LEFT_PAREN),
+            (')', _) => addOneTokenChar(TokenType.RIGHT_PAREN),
+            ('{', _) => addOneTokenChar(TokenType.LEFT_BRACE),
+            ('}', _) => addOneTokenChar(TokenType.RIGHT_BRACE),
+            (',', _) => addOneTokenChar(TokenType.COMMA),
+            ('.', _) => addOneTokenChar(TokenType.DOT),
+            ('-', _) => addOneTokenChar(TokenType.MINUS),
+            ('+', _) => addOneTokenChar(TokenType.PLUS),
+            ('*', _) => addOneTokenChar(TokenType.STAR),
+            (';', _) => addOneTokenChar(TokenType.SEMICOLON),
+            ('!', '=') => addTwoTokenChar(TokenType.BANG_EQUAL),
+            ('!', _) => addOneTokenChar(TokenType.BANG),
+            ('=', '=') => addTwoTokenChar(TokenType.EQUAL_EQUAL),
+            ('=', _) => addOneTokenChar(TokenType.EQUAL),
+            ('>', '=') => addTwoTokenChar(TokenType.GREATER_EQUAL),
+            ('>', _) => addOneTokenChar(TokenType.GREATER),
+            ('<', '=') => addTwoTokenChar(TokenType.LESS_EQUAL),
+            ('<', _) => addOneTokenChar(TokenType.LESS),
             ('/', '/') => consumeSecond() && discardComment(),
-            ('/', _) => addToken(TokenType.SLASH),
+            ('/', _) => addOneTokenChar(TokenType.SLASH),
             ('"', _) => consumeString(),
             (' ' or '\r' or '\t', _) => source.Count > 0,
             ('\n', _) => incrementLine(),
+            // TODO throws
             var (first, _) when isDigit(first) => number(),
+            // TODO cuts off first char
             var (first, _) when isAlpha(first) => identifier(),
             (_, _) => throw new Exception()
         };
     }
 }
 
-    [GenerateOneOf]
-    public partial class StringOrNumber : OneOfBase<string, double> { }
+[GenerateOneOf]
+public partial class StringOrChar: OneOfBase<string, char> {} 

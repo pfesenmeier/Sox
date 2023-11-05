@@ -20,7 +20,7 @@ public class Program {
         Console.WriteLine("Welcome to Lox v0.0.1.");
 
         while (true) {
-            Console.WriteLine("> ");
+            Console.Write("> ");
             var line = Console.ReadLine();
             if (line == null) break;
             run(line);
