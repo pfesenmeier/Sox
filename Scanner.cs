@@ -56,7 +56,7 @@ public class Scanner
     private bool consumeString()
     {
         var str = string.Empty;
-        while (source.Count > 0 && source.Peek() is not '"')
+        while (queueHasSome && source.Peek() is not '"')
         {
             if (source.Peek() is '\n') line++;
             str += source.Dequeue();
@@ -65,14 +65,14 @@ public class Scanner
         if (source.Count is 0)
         {
             Program.error(line, "Unterminated string.");
-            return source.Count > 0;
+            return queueHasSome;
         }
 
         source.Dequeue();
 
         addToken(new TokenOptions(TokenType.STRING, literal: str, lexeme: $"\"{str}\""));
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     private bool addToken(TokenOptions options)
@@ -85,7 +85,7 @@ public class Scanner
             line = line
         });
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     // pass in first char that has been removed from the queue
@@ -93,14 +93,14 @@ public class Scanner
     {
         var text = first.ToString();
 
-        while (source.Count > 0 && isAlphaNumeric(source.Peek())) text += source.Dequeue();
+        while (queueHasSome && isAlphaNumeric(source.Peek())) text += source.Dequeue();
 
         if (keywords.ContainsKey(text))
             addToken(new TokenOptions(keywords[text], text));
         else
             addToken(new TokenOptions(TokenType.IDENTIFIER, text));
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     private bool isAlpha(char c)
@@ -123,39 +123,41 @@ public class Scanner
     {
         var text = "" + first;
 
-        while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
+        while (queueHasSome && isDigit(source.Peek())) text += source.Dequeue();
 
         if (source.Count > 1 && source.Peek() == '.' && isDigit(source.AsQueryable().Skip(1).First()))
         {
             text += source.Dequeue();
 
-            while (source.Count > 0 && isDigit(source.Peek())) text += source.Dequeue();
+            while (queueHasSome && isDigit(source.Peek())) text += source.Dequeue();
         }
 
         addToken(new TokenOptions(TokenType.NUMBER, text, Convert.ToDouble(text)));
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     private bool discardComment()
     {
-        while (source.Count > 0 && source.Peek() is not '\n') source.Dequeue();
+        while (queueHasSome && source.Peek() is not '\n') source.Dequeue();
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     private bool incrementLine()
     {
         line++;
 
-        return source.Count > 0;
+        return queueHasSome;
     }
+
+    private bool queueHasSome => source.Count > 0;
 
     private bool consumeSecond()
     {
         source.Dequeue();
 
-        return source.Count > 0;
+        return queueHasSome;
     }
 
     private bool scanToken()
@@ -173,7 +175,7 @@ public class Scanner
         {
             Program.error(line, $"unrecognized character: {input}");
 
-            return source.Count > 0;
+            return queueHasSome;
         };
 
         return match switch
@@ -199,7 +201,7 @@ public class Scanner
             ('/', '/') => consumeSecond() && discardComment(),
             ('/', _) => addOneTokenChar(TokenType.SLASH),
             ('"', _) => consumeString(),
-            (' ' or '\r' or '\t', _) => source.Count > 0,
+            (' ' or '\r' or '\t', _) => queueHasSome,
             ('\n', _) => incrementLine(),
             var (first, _) when isDigit(first) => number(first),
             var (first, _) when isAlpha(first) => identifier(first),
