@@ -48,7 +48,7 @@ public class Program
 
         var tokens = scanner.scanTokens();
 
-        foreach (var token in tokens) Console.WriteLine(token);
+        foreach (var token in tokens) info(token);
         // Parser parser = new Parser(tokens);
         // Expr expression = parser.parse();
         // if (hadError) return;
@@ -64,8 +64,22 @@ public class Program
 
     private static void report(int line, string where, string message)
     {
-        Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
+        print($"[line {line}] Error {where}: {message}", ConsoleColor.DarkMagenta);
     }
+
+    private static void print(string message, ConsoleColor color)
+    {
+        var prev = Console.ForegroundColor;
+        Console.ForegroundColor = color;
+        Console.WriteLine(message);
+        Console.ForegroundColor = prev;
+    }
+
+    private static void info(object message)
+    {
+        print(message?.ToString() ?? "", ConsoleColor.Green);
+    }
+
 
     public static void error(Token token, string message)
     {
