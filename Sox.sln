@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sox", "Sox.csproj", "{F91AF3BC-1843-477A-B84C-3279A0AE73EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sox", "src\Sox.csproj", "{F91AF3BC-1843-477A-B84C-3279A0AE73EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{1C848C04-425C-4628-AC60-DFCC352FA2EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +20,9 @@ Global
 		{F91AF3BC-1843-477A-B84C-3279A0AE73EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F91AF3BC-1843-477A-B84C-3279A0AE73EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F91AF3BC-1843-477A-B84C-3279A0AE73EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C848C04-425C-4628-AC60-DFCC352FA2EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C848C04-425C-4628-AC60-DFCC352FA2EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C848C04-425C-4628-AC60-DFCC352FA2EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C848C04-425C-4628-AC60-DFCC352FA2EF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
